@@ -2,6 +2,8 @@ package burp;
 
 import java.io.PrintWriter;
 
+//This is the class that is the entry point
+//It registers the new menu item
 public class BurpExtender implements IBurpExtender
 {
     @SuppressWarnings("deprecation")
@@ -16,6 +18,7 @@ public class BurpExtender implements IBurpExtender
 }
 
 @SuppressWarnings("deprecation")
+//This class implements the menu item and defines its clicked method
 class MultiScannerMenuItem implements IMenuItemHandler
 {
 	IBurpExtenderCallbacks callbacks;
@@ -26,6 +29,7 @@ class MultiScannerMenuItem implements IMenuItemHandler
 		callbacks = callbacksSent;
 	}
 	
+	//What happens when you initiate the Multi Scanner
 	public void menuItemClicked(String caption, IHttpRequestResponse[] messageInfo)
 	{
 		PrintWriter stdout = new PrintWriter(callbacks.getStdout(), true);
@@ -40,6 +44,9 @@ class MultiScannerMenuItem implements IMenuItemHandler
 		String userAgentsList = "";
 		System.out.println(caption+" clicked");
 		
+		// A list of all the user agents we use
+		//This list can be augmented if we need
+		//to impersonate more devices
 		String userAgents [] = 
 			{
 				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:16.0) Gecko/20100101 Firefox/16.0",
@@ -51,6 +58,9 @@ class MultiScannerMenuItem implements IMenuItemHandler
 				"Mozilla/5.0 (BlackBerry; U; BlackBerry 9900; en) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.1.0.346 Mobile Safari/534.11+"
 			};
 		
+		//A data structure to save all the response lengths
+		//This is shown to the viewer
+		//It is also used to compare the responses
 		long [][] responseLength = new long[messageInfo.length][userAgents.length];
 		for(int i=0; i<messageInfo.length; i++)
 		{
@@ -89,6 +99,9 @@ class MultiScannerMenuItem implements IMenuItemHandler
 			
 			for(int i=0; i<userAgents.length;i++)
 			{	
+					//Construct http request
+					//For each target
+					//For each user agent
 					String httpRequestString = "GET / HTTP/1.1\r\nHost: "+host+"\r\nUser-Agent: "+userAgents[i]+"\r\n\r\n";
 					byte[] httpResponse = callbacks.makeHttpRequest(host, port, ssl, httpRequestString.getBytes());
 					stdout.println(userAgents[i]);
@@ -106,6 +119,7 @@ class MultiScannerMenuItem implements IMenuItemHandler
 			{
 				if(responseLength[i][j] !=  responseLength[i][0] && first)
 				{
+					//Mark that scan will have to be done
 					stdout.println("Target "+messageInfo[i].getHttpService().getHost()+" has"
 							+ " different versions."
 							+ "\nSending to active scan.");
@@ -131,13 +145,18 @@ class MultiScannerMenuItem implements IMenuItemHandler
 				
 				for(int j=0; j<userAgents.length;j++)
 				{
+					//Construct http request
+					//For each target
+					//For each user agent
 					httpRequestString = "GET / HTTP/1.1\r\nHost: "+host+"\r\n"
 							+ "User-Agent: "+userAgents[j]+"\r\n\r\n";
+					//Call active scan 
 					callbacks.doActiveScan(host, port, ssl, httpRequestString.getBytes());
 				}
 			}
 			else
 			{
+				//If the marking indicated scan is not needed
 				callbacks.issueAlert("No differing versions found for "+ messageInfo[i].getHttpService().getHost()+""
 						+ ". Not scanning.");
 			}
